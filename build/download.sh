@@ -41,10 +41,10 @@ if [ "$UNAME" = "Darwin" ] ; then
         echo "Only 64-bit Intel or ARM processors are supported at this time."
         exit 1
       else
-        PLATFORM="darwin-arm64"
+        PLATFORM="darwin/arm64"
       fi
     else
-      PLATFORM="darwin-amd64"
+      PLATFORM="darwin/amd64"
     fi
   else
       echo "Only 64-bit processors are supported at this time."
@@ -59,7 +59,7 @@ elif [ "$UNAME" = "Linux" ] ; then
   ### Linux ###
   LINUX_ARCH=$(uname -m)
   if [ "${LINUX_ARCH}" = "x86_64" ] ; then
-    PLATFORM="linux-amd64"
+    PLATFORM="linux/amd64"
   else
     echo "Unsupported architecture: ${LINUX_ARCH}"
     echo "Empirica only supports x86_64 for now."
@@ -78,7 +78,7 @@ if [ -z $TEMP_DIR ] || [ ! -d $TEMP_DIR ]; then
   exit 1
 fi
 
-BIN_URL="https://install.empirica.dev/proxy/empirica-${PLATFORM}"
+BIN_URL="https://install.empirica.dev/proxy/${PLATFORM}/branch/main/empirica"
 
 echo $BIN_URL
 
