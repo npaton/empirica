@@ -1,6 +1,8 @@
 package cloudcmd
 
 import (
+	"os"
+
 	"github.com/empiricaly/empirica/internal/cloud"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -16,9 +18,9 @@ func AddSigninCommand(parent *cobra.Command) error {
 		SilenceErrors: true,
 		Hidden:        true,
 		Args:          cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := initContext()
-			_, err := cloud.SignIn(ctx)
+			_, err := cloud.SignIn(ctx, os.Stderr)
 			return errors.Wrap(err, "sign into empirica cloud")
 		},
 	}

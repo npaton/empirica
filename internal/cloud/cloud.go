@@ -1,32 +1,31 @@
 package cloud
 
 import (
+	"net/url"
 	"os"
 	"path"
 
 	"github.com/empiricaly/empirica/internal/settings"
+	"github.com/pkg/errors"
 )
 
 const (
-	apiEmulatorBaseURL     = "http://127.0.0.1:9092/empirica-cloud/us-central1"
-	apiProductionBaseURL   = "http://127.0.0.1:9092/empirica-cloud/us-central1"
-	apiEnvBaseURL          = "EMPIRICA_CLOUD_API_BASE_URL"
-	webEmulatorBaseURL     = "http://127.0.0.1:9092/empirica-cloud/us-central1"
-	webProductionBaseURL   = "http://127.0.0.1:9092/empirica-cloud/us-central1"
-	webEnvBaseURL          = "EMPIRICA_CLOUD_WEB_BASE_URL"
-	envEmulator            = "EMPIRICA_CLOUD_EMULATOR"
+	apiEnvBaseURL          = "EMPIRICA_CLOUD_DEV_API_BASE_URL"
+	apiProductionBaseURL   = "https://us-central1-empirica-cloud.cloudfunctions.net"
+	webEnvBaseURL          = "EMPIRICA_CLOUD_DEV_WEB_BASE_URL"
+	webProductionBaseURL   = "https://empirica.cloud"
 	dashBasePath           = "dash"
 	accountLinkingBasePath = "link"
 )
 
-// CloudConfigDir returns the path to the cloud config directory.
-func CloudConfigDir() string {
+// ConfigDir returns the path to the cloud config directory.
+func ConfigDir() string {
 	return path.Join(settings.ConfigHomeDir(), "cloud")
 }
 
-// CloudAuthConfigDir returns the path to the cloud auth config directory.
-func CloudAuthConfigFile() string {
-	return path.Join(CloudConfigDir(), "auth.yaml")
+// AuthConfigFile returns the path to the cloud auth config directory.
+func AuthConfigFile() string {
+	return path.Join(ConfigDir(), "auth.yaml")
 }
 
 // baseURL returns the base URL to the cloud API.
@@ -35,16 +34,16 @@ func apiBaseURL() string {
 
 	if envBaseURLResolved != "" {
 		return envBaseURLResolved
-	} else if os.Getenv(envEmulator) != "" {
-		return apiEmulatorBaseURL
-	} else {
-		return apiProductionBaseURL
 	}
+
+	return apiProductionBaseURL
 }
 
-// CloudAPIURL returns the URL to the cloud API.
-func CloudAPIURL(endpoint string) string {
-	return path.Join(apiBaseURL(), endpoint)
+// APIURL returns the URL to the cloud API.
+func APIURL(endpoint string) (string, error) {
+	u, err := url.JoinPath(apiBaseURL(), endpoint)
+
+	return u, errors.Wrap(err, "join path")
 }
 
 // baseURL returns the base URL to the cloud API.
@@ -53,24 +52,31 @@ func webBaseURL() string {
 
 	if envBaseURLResolved != "" {
 		return envBaseURLResolved
-	} else if os.Getenv(envEmulator) != "" {
-		return webEmulatorBaseURL
-	} else {
-		return webProductionBaseURL
 	}
+
+	return webProductionBaseURL
 }
 
-// CloudWebURL returns the URL to the cloud website.
-func CloudWebURL(endpoint string) string {
-	return path.Join(webBaseURL(), endpoint)
+// WebURL returns the URL to the cloud website.
+func WebURL(endpoint string) (string, error) {
+	u, err := url.JoinPath(webBaseURL(), endpoint)
+
+	return u, errors.Wrap(err, "join path")
+}
+
+// DashURL returns the URL to the cloud web dashboard.
+func DashURL(endpoint string) (string, error) {
+	base, err := WebURL(dashBasePath)
+	if err != nil {
+		return "", errors.Wrap(err, "get web URL")
+	}
+
+	u, err := url.JoinPath(base, endpoint)
+
+	return u, errors.Wrap(err, "join path")
 }
 
 // CloudDashURL returns the URL to the cloud web dashboard.
-func CloudDashURL(endpoint string) string {
-	return path.Join(CloudWebURL(dashBasePath), endpoint)
-}
-
-// CloudDashURL returns the URL to the cloud web dashboard.
-func CloudAccountLinkingURL() string {
-	return CloudDashURL(accountLinkingBasePath)
+func AccountLinkingURL() (string, error) {
+	return DashURL(accountLinkingBasePath)
 }
