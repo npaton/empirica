@@ -12,6 +12,23 @@
       val: JSON.stringify(null),
       nodeID: player.id,
     });
+
+    const gameId = player.get("gameID");
+    const participantId = player.get("participantID");
+
+    console.log("clear", gameId, participantId);
+
+    $currentAdmin.addLink({
+      link: false,
+      participantIDs: [participantId],
+      nodeIDs: [gameId],
+    });
+
+    $currentAdmin.setAttribute({
+      key: "gameID",
+      val: JSON.stringify(null),
+      nodeID: player.id,
+    });
   }
 </script>
 

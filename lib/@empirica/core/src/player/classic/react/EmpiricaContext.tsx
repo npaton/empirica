@@ -92,6 +92,7 @@ export function EmpiricaContext({
     !globals ||
     (hasPlayer && (!participantConnected || !player || game === undefined))
   ) {
+    console.log("HERE");
     return <LoadingComp />;
   }
 
@@ -114,6 +115,7 @@ export function EmpiricaContext({
   }
 
   if (!player || (!unmanagedGame && !game)) {
+    console.log("HERE2", player, game);
     return <LoadingComp />;
   }
 
@@ -129,6 +131,7 @@ export function EmpiricaContext({
 
   if (game && game.hasEnded) {
     if (!player.get("ended")) {
+      console.log("HERE3");
       return <LoadingComp />;
     }
 
@@ -176,6 +179,7 @@ function EmpiricaInnerContext({
     if (unmanagedGame) {
       return <>{children}</>;
     } else {
+      console.log("HERE4");
       return <LoadingComp />;
     }
   }
@@ -186,6 +190,7 @@ function EmpiricaInnerContext({
 
   if (game.hasEnded) {
     if (!player?.get("ended")) {
+      console.log("HERE5");
       return <LoadingComp />;
     }
 
@@ -193,6 +198,7 @@ function EmpiricaInnerContext({
   }
 
   if (!unmanagedGame && (!stage || !round)) {
+    console.log("HERE6");
     return <LoadingComp />;
   }
 

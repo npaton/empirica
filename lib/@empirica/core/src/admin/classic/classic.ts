@@ -67,10 +67,12 @@ export function Classic({
       player: Player,
       skipGameIDs?: string[]
     ) {
+      console.log("assignplayer1");
       if (disableAssignment) {
         return;
       }
 
+      console.log("assignplayer2");
       if (player.get("gameID")) {
         return;
       }
@@ -91,6 +93,8 @@ export function Classic({
           }
         }
 
+        console.log("assignplayer3", availableGames.length, "games");
+
         if (availableGames.length === 0) {
           continue;
         }
@@ -101,6 +105,7 @@ export function Classic({
           );
         }
 
+        console.log("assignplayer4", availableGames.length, "games");
         if (availableGames.length === 0) {
           continue;
         }
@@ -112,7 +117,9 @@ export function Classic({
         return;
       }
 
+      console.log("assignplayer5");
       if (player.get("gameID") !== undefined) {
+        console.log("assignplayer6");
         player.set("ended", "no more games");
       }
     }
@@ -187,6 +194,16 @@ export function Classic({
       round.set("start", true);
     }
 
+    async function playerConnected(
+      ctx: EventContext<Context, ClassicKinds>,
+      player: Player
+    ) {
+      // console.log("ALREADY", participant.id, player.id);
+      console.log("playerConnected");
+      await assignplayer(ctx, player);
+      await tryStartGame(ctx, player);
+    }
+
     _.on(TajribaEvent.ParticipantConnect, async (ctx, { participant }) => {
       online.set(participant.id, participant);
 
@@ -212,8 +229,7 @@ export function Classic({
           },
         ]);
       } else {
-        // console.log("ALREADY", participant.id, player.id);
-        await assignplayer(ctx, player);
+        await playerConnected(ctx, player);
       }
     });
 
@@ -236,7 +252,7 @@ export function Classic({
       ]);
 
       if (online.has(participantID)) {
-        await assignplayer(ctx, player);
+        await playerConnected(ctx, player);
       }
     });
 
@@ -303,6 +319,7 @@ export function Classic({
           case "running": {
             for (const [_, player] of playersForParticipant) {
               if (player.participantID) {
+                console.log("assignplayer c");
                 await assignplayer(ctx, player);
               }
             }
@@ -449,8 +466,12 @@ export function Classic({
       return { nextStage, nextRound, stop: false };
     }
 
-    _.on("player", "introDone", async (ctx, { player }: { player: Player }) => {
+    async function tryStartGame(
+      ctx: EventContext<Context, ClassicKinds>,
+      player: Player
+    ) {
       if (disableIntroCheck || !player.currentGame) {
+        console.log("nope", player.currentGame);
         return;
       }
 
@@ -462,12 +483,14 @@ export function Classic({
       );
 
       if (readyPlayers.length < playerCount) {
+        console.log("nope", readyPlayers.length);
         trace("introDone: not enough players ready yet");
 
         return;
       }
 
       if (game.hasStarted) {
+        console.log("nopeee");
         trace("introDone: game already started");
 
         return;
@@ -478,12 +501,22 @@ export function Classic({
       for (const plyr of game.players) {
         if (!playersIDS.includes(plyr.id)) {
           plyr.set("gameID", null);
+          console.log("assignplayer d");
           await assignplayer(ctx, plyr, [game.id]);
         }
       }
 
       trace("introDone: starting game");
       game.start();
+    }
+
+    _.on("player", "gameID", async (ctx, { player }: { player: Player }) => {
+      await assignplayer(ctx, player);
+      await tryStartGame(ctx, player);
+    });
+
+    _.on("player", "introDone", async (ctx, { player }: { player: Player }) => {
+      await tryStartGame(ctx, player);
     });
 
     type BeforeGameStart = { game: Game; start: boolean };
