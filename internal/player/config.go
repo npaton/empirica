@@ -1,15 +1,20 @@
 package player
 
 import (
+	"os"
+
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
+var (
+	defaultDevCommand   = os.Args[0] + " npm run --silent dev"
+	defaultBuildCommand = os.Args[0] + " npm run --silent build"
+)
+
 const (
-	defaultDevCommand   = "npm run --silent dev"
-	defaultBuildCommand = "npm run --silent build"
 	// defaultServeCommand = ""
 	defaultBuildDir = "dist"
 )

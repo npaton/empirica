@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/empiricaly/empirica/internal/proc"
 	"github.com/pkg/errors"
 )
 
@@ -34,7 +34,7 @@ func RunCmdSilent(ctx context.Context, dir, command string, args ...string) erro
 }
 
 func runCmdSilence(ctx context.Context, dir string, silent bool, command string, args ...string) error {
-	c := exec.CommandContext(ctx, command, args...)
+	c := proc.New(command, args...)
 
 	if !silent {
 		c.Stderr = os.Stderr

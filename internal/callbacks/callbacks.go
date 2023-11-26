@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/cortesi/moddwatch"
+	"github.com/empiricaly/empirica/internal/proc"
 	"github.com/empiricaly/empirica/internal/term"
 	"github.com/jpillora/backoff"
 	"github.com/pkg/errors"
@@ -49,7 +50,7 @@ func Build(ctx context.Context, config *Config) error {
 		args = parts[1:]
 	}
 
-	c := exec.CommandContext(ctx, parts[0], args...)
+	c := proc.New(parts[0], args...)
 
 	c.Stderr = os.Stderr
 	c.Stdout = os.Stdout
@@ -353,7 +354,7 @@ func (cb *Callbacks) runOnce(ctx context.Context) (*exec.Cmd, error) {
 		remainder = parts[1:]
 	}
 
-	c := exec.CommandContext(ctx, parts[0], remainder...) // #nosec G204
+	c := proc.New(parts[0], remainder...) // #nosec G204
 	c.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: 0}
 
 	c.Stderr = cb.stderr
@@ -385,6 +386,10 @@ func (cb *Callbacks) enrichCmd(cmd string) string {
 		}
 
 		cmd = cmd + " --sessionTokenPath " + p
+	}
+
+	if cb.config.URL != "" {
+		cmd = cmd + " --url " + cb.config.URL
 	}
 
 	return cmd

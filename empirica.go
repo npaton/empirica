@@ -2,6 +2,8 @@ package empirica
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/empiricaly/empirica/internal/callbacks"
@@ -78,6 +80,14 @@ func Start(ctx context.Context, config *Config, usingConfigFile bool) (*Runner, 
 
 	config.Callbacks.Token = config.Tajriba.Auth.ServiceRegistrationToken
 	config.Tajriba.Server.Production = config.Production
+
+	if config.Server.Addr != ":3000" {
+		if strings.HasPrefix(config.Server.Addr, ":") {
+			config.Callbacks.URL = fmt.Sprintf("http://localhost%s", config.Server.Addr)
+		} else {
+			config.Callbacks.URL = fmt.Sprintf("http://%s", config.Server.Addr)
+		}
+	}
 
 	r.callbacks, err = callbacks.Start(ctx, config.Callbacks)
 	if err != nil {

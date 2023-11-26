@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/empiricaly/empirica/internal/experiment"
 	"github.com/empiricaly/empirica/internal/settings"
 	"github.com/pkg/errors"
@@ -25,7 +28,15 @@ func addNPMCommand(parent *cobra.Command) error {
 				return errors.Wrap(err, "check node")
 			}
 
-			return experiment.RunCmd(ctx, "", "npm", args...)
+			fmt.Println("RUNNING", "npm", args)
+			err := experiment.RunCmd(ctx, "", "npm", args...)
+			if err != nil && !strings.Contains(err.Error(), "signal: killed") {
+				fmt.Println("ENDED WITH ERROR", err)
+				return err
+			}
+			fmt.Println("ENDED WITHOUT ERROR")
+
+			return nil
 		},
 	}
 

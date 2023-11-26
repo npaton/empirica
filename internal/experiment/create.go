@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -16,10 +15,8 @@ import (
 	"golang.org/x/term"
 )
 
-func Create(ctx context.Context, name string) error {
-	dir := filepath.Clean(name)
-
-	stop := ShowSpinner("Setup directory")
+func Create(ctx context.Context, name, dir, clientTemplate, serverTemplate string, skipSetup bool) error {
+	stop := ShowSpinner("Setup directory" + " " + clientTemplate + " " + serverTemplate)
 
 	if err := CreateDir(dir); err != nil {
 		return errors.Wrap(err, "name")
@@ -32,47 +29,49 @@ func Create(ctx context.Context, name string) error {
 
 	stop = ShowSpinner("Copy project files")
 
-	if err := templates.CopyDir(name, serverDir, "callbacks"); err != nil {
+	if err := templates.CopyDir(name, serverDir, serverTemplate); err != nil {
 		return errors.Wrap(err, "server: copy directory")
 	}
 
-	if err := templates.CopyDir(name, clientDir, "react"); err != nil {
+	if err := templates.CopyDir(name, clientDir, clientTemplate); err != nil {
 		return errors.Wrap(err, "client: copy directory")
 	}
 
 	stop()
 
-	stop = ShowSpinner("Install client packages")
+	if skipSetup {
+		stop = ShowSpinner("Install client packages")
 
-	if err := RunCmdSilent(ctx, clientDir, "npm", "install", "--silent"); err != nil {
-		return errors.Wrap(err, "client")
+		if err := RunCmdSilent(ctx, clientDir, "npm", "install", "--silent"); err != nil {
+			return errors.Wrap(err, "client")
+		}
+
+		stop()
+
+		stop = ShowSpinner("Install server packages")
+
+		if err := RunCmdSilent(ctx, serverDir, "npm", "install", "--silent"); err != nil {
+			return errors.Wrap(err, "server")
+		}
+
+		stop()
+
+		// if err := UpgradePackages(ctx, "latest", clientDir, serverDir); err != nil {
+		// 	return errors.Wrap(err, "upgrade empirica")
+		// }
+
+		stop = ShowSpinner("Generate default settings")
+
+		if err := settings.Init(name, dir); err != nil {
+			return errors.Wrap(err, "empirica")
+		}
+
+		if err := build.SaveReleaseFile(dir); err != nil {
+			return errors.Wrap(err, "save release version")
+		}
+
+		stop()
 	}
-
-	stop()
-
-	stop = ShowSpinner("Install server packages")
-
-	if err := RunCmdSilent(ctx, serverDir, "npm", "install", "--silent"); err != nil {
-		return errors.Wrap(err, "server")
-	}
-
-	stop()
-
-	if err := UpgradePackages(ctx, "latest", clientDir, serverDir); err != nil {
-		return errors.Wrap(err, "upgrade empirica")
-	}
-
-	stop = ShowSpinner("Generate default settings")
-
-	if err := settings.Init(name, dir); err != nil {
-		return errors.Wrap(err, "empirica")
-	}
-
-	if err := build.SaveReleaseFile(dir); err != nil {
-		return errors.Wrap(err, "save release version")
-	}
-
-	stop()
 
 	printCreateDone(name)
 

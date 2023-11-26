@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/empiricaly/empirica/internal/experiment"
@@ -34,8 +35,9 @@ func addCreateCommand(parent *cobra.Command) error {
 			// current, err := os.Getwd()
 			// if
 
-			if err := experiment.Create(ctx, args[0]); err != nil {
-				return errors.Wrap(err, "get current directory")
+			dir := filepath.Clean(args[0])
+			if err := experiment.Create(ctx, args[0], dir, "react", "callbacks", false); err != nil {
+				return errors.Wrap(err, "create experiment")
 			}
 
 			return nil

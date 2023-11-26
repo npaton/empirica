@@ -3,6 +3,7 @@ package player
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/empiricaly/empirica/internal/proc"
 	"github.com/empiricaly/empirica/internal/term"
 	"github.com/jpillora/backoff"
 	"github.com/pkg/errors"
@@ -36,7 +38,7 @@ func Build(ctx context.Context, config *Config) error {
 		args = parts[1:]
 	}
 
-	c := exec.CommandContext(ctx, parts[0], args...)
+	c := proc.New(parts[0], args...)
 
 	c.Stderr = os.Stderr
 	c.Stdout = os.Stdout
@@ -105,6 +107,7 @@ func (p *Player) run(ctx context.Context) {
 			err = c.Wait()
 
 			if err != nil {
+				fmt.Println("player err", err)
 				errs := err.Error()
 				if errors.Is(err, context.Canceled) ||
 					strings.Contains(errs, "context canceled") ||
@@ -118,6 +121,7 @@ func (p *Player) run(ctx context.Context) {
 			if err == nil {
 				select {
 				case <-ctx.Done():
+					fmt.Println("player done")
 					return
 				default:
 					continue
@@ -149,12 +153,23 @@ func (p *Player) runDevCmd(ctx context.Context) (*exec.Cmd, error) {
 		return nil, errors.New("empty player devcmd")
 	}
 
-	shell := "/bin/sh"
-	if sh := os.Getenv("SHELL"); sh != "" {
-		shell = sh
-	}
+	fmt.Println("p.config.DevCmd", p.config.DevCmd)
 
-	parts = append([]string{shell, "-c"}, strings.Join(parts, " "))
+	// shell := "/bin/sh"
+	// if sh := os.Getenv("SHELL"); sh != "" {
+	// 	shell = sh
+	// }
+
+	// script := `#/bin/bash
+
+	// trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+	// `
+
+	// script += strings.Join(parts, " ")
+	// script := strings.Join(parts, " ")
+	// fmt.Println(script)
+	// parts = append([]string{shell, "-c"}, script)
+	// parts = append([]string{shell, "-c"}, script)
 
 	var args []string
 	if len(parts) > 1 {
@@ -163,7 +178,7 @@ func (p *Player) runDevCmd(ctx context.Context) (*exec.Cmd, error) {
 
 	log.Trace().Str("cmd", strings.Join(parts, " ")).Msg("player: run player dev command")
 
-	c := exec.CommandContext(ctx, parts[0], args...)
+	c := proc.New(parts[0], args...)
 
 	c.Stderr = os.Stderr
 	c.Stdout = p.stdout

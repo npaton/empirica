@@ -19,6 +19,7 @@ type Config struct {
 	Token            string `mapstructure:"token"`
 	SessionToken     string `mapstructure:"sessionTokenPath"`
 	SaveSessionToken bool   `mapstructure:"sessionToken"`
+	URL              string `mapstructure:"url"`
 }
 
 // Validate configuration is ok.
@@ -83,6 +84,11 @@ func ConfigFlags(cmd *cobra.Command, prefix string) error {
 	flag = prefix + ".sessionToken"
 	bval := true
 	cmd.Flags().Bool(flag, bval, "Save sessionToken")
+	viper.SetDefault(flag, bval)
+
+	flag = prefix + ".url"
+	sval = "http://localhost:3000"
+	cmd.Flags().Bool(flag, bval, "URL of the server")
 	viper.SetDefault(flag, bval)
 
 	return nil
